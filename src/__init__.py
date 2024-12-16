@@ -1,0 +1,3 @@
+"""
+UML Diagram Editor Package
+"""
