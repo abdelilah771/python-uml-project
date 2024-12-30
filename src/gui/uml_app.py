@@ -30,8 +30,7 @@ class UMLApp:
         # UI setup
         self._setup_ui()
 
-def _setup_ui(self):
-    """Initialize and configure the menu bar for the application interface."""
+    def _setup_ui(self):
         """Set up the user interface with a menu bar."""
         menu_bar = tk.Menu(self.root)
 
@@ -51,8 +50,7 @@ def _setup_ui(self):
 
         self.root.config(menu=menu_bar)
 
-def add_class(self):
-    """Prompt the user to create a new UML class box and add it to the diagram."""
+    def add_class(self):
         """Add a new class box."""
         class_name = simpledialog.askstring("Class Name", "Enter the class name:")
         attributes = simpledialog.askstring("Attributes", "Enter attributes (comma-separated):")
@@ -64,8 +62,7 @@ def add_class(self):
             box = ClassBox(self.canvas, 100, 100, class_name, attr_list, method_list)
             self.class_boxes.append(box)
 
-def add_association(self):
-    """Prompt the user to create an association line between two UML class boxes."""
+    def add_association(self):
         """Add an association line between two classes."""
         if len(self.class_boxes) < 2:
             messagebox.showerror("Error", "You need at least two classes to create an association.")
@@ -91,8 +88,7 @@ def add_association(self):
         else:
             messagebox.showerror("Error", "Class not found.")
 
-def generate_code(self):
-    """Generate source code for all UML classes based on the current diagram."""
+    def generate_code(self):
         """Generate and display code for all classes."""
         language = simpledialog.askstring(
             "Code Generation", "Enter target language (python, java, php):"
@@ -133,8 +129,7 @@ def generate_code(self):
         # Display the generated code
         self.display_code_in_window(code_output, language)
 
-def display_code_in_window(self, code, language):
-    """Open a window to display the generated source code."""
+    def display_code_in_window(self, code, language):
         """Display the generated code in a new Tkinter window."""
         code_window = tk.Toplevel(self.root)
         code_window.title(f"Generated Code ({language})")
@@ -147,8 +142,7 @@ def display_code_in_window(self, code, language):
         save_button = tk.Button(code_window, text="Save Code", command=lambda: self.save_code_to_file(code, language))
         save_button.pack(pady=5)
 
-def save_code_to_file(self, code, language):
-    """Save the generated source code file in the specified language."""
+    def save_code_to_file(self, code, language):
         """Save the generated code to a file."""
         file_path = filedialog.asksaveasfilename(
             defaultextension=f".{language}",
@@ -160,8 +154,7 @@ def save_code_to_file(self, code, language):
                 file.write(code)
             messagebox.showinfo("Success", f"Code successfully saved to {file_path}")
 
-def save_diagram(self):
-    """Save the current UML diagram as a JSON file for later use."""
+    def save_diagram(self):
         """Save the current diagram to a JSON file."""
         file_path = filedialog.asksaveasfilename(
             defaultextension=".json",
@@ -190,8 +183,7 @@ def save_diagram(self):
                 json.dump(data, file, indent=4)
             messagebox.showinfo("Success", f"Diagram successfully saved to {file_path}")
 
-def load_diagram(self):
-    """Load a UML diagram from a JSON file and populate the canvas."""
+    def load_diagram(self):
         """Load a diagram from a JSON file."""
         file_path = filedialog.askopenfilename(
             defaultextension=".json",
@@ -229,8 +221,7 @@ def load_diagram(self):
 
             messagebox.showinfo("Success", "Diagram successfully loaded.")
 
-def delete_item(self, event):
-    """Delete the selected class box or an association line from the diagram."""
+    def delete_item(self, event):
         """Delete the selected class box or association line."""
         item = self.canvas.find_closest(event.x, event.y)[0]
         for box in self.class_boxes:
@@ -244,8 +235,7 @@ def delete_item(self, event):
                 self.associations.remove(assoc)
                 return
 
-def on_drag(self, event):
-    """Enable moving the UML class boxes by dragging them on the canvas."""
+    def on_drag(self, event):
         """Handle drag events for moving boxes."""
         if not self.drag_data["item"]:
             item = self.canvas.find_closest(event.x, event.y)[0]
@@ -264,7 +254,6 @@ def on_drag(self, event):
             for assoc, _, _, _ in self.associations:
                 assoc.update_line()
 
-def on_release(self, event):
-    """Clear the drag data when the mouse button is released."""
+    def on_release(self, event):
         """Handle mouse release."""
         self.drag_data["item"] = None

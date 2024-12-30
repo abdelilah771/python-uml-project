@@ -17,6 +17,24 @@
             "methods": [
                 "b"
             ]
+        },
+        {
+            "name": "c",
+            "attributes": [
+                "c"
+            ],
+            "methods": [
+                "c"
+            ]
+        },
+        {
+            "name": "d",
+            "attributes": [
+                "d"
+            ],
+            "methods": [
+                "d"
+            ]
         }
     ],
     "associations": [
@@ -24,6 +42,11 @@
             "type": "inheritance",
             "from": "a",
             "to": "b"
+        },
+        {
+            "type": "inheritance",
+            "from": "d",
+            "to": "c"
         }
     ]
 }
