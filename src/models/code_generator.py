@@ -1,104 +1,90 @@
 import json
 
-def generate_code_from_diagram(diagram, language):
-    """Generate code from the UML diagram data."""
-    classes = {cls["name"]: cls for cls in diagram["classes"]}
-    associations = diagram["associations"]
+def generate_code_from_diagram(file_path, language):
+    """Generate code based on a saved UML diagram JSON file."""
+    try:
+        with open(file_path, "r") as file:
+            data = json.load(file)
+    except Exception as e:
+        raise ValueError(f"Error reading file: {e}")
 
-    code_output = []
+    classes = {cls["name"]: cls for cls in data.get("classes", [])}
+    associations = data.get("associations", [])
 
-    # Helper to format class definition
-    def format_class(cls_name, attributes, methods, parent_class=None):
-        if language == "python":
-            inheritance = f"({parent_class})" if parent_class else ""
-            attr_lines = [f"    self.{attr} = None" for attr in attributes]
-            method_lines = [f"    def {method}(self):\n        pass" for method in methods]
-            return (
-                f"class {cls_name}{inheritance}:\n"
-                f"    def __init__(self):\n"
-                + "\n".join(attr_lines) + "\n"
-                + "\n".join(method_lines) + "\n"
-            )
-        elif language == "java":
-            inheritance = f" extends {parent_class}" if parent_class else ""
-            attr_lines = [f"    private String {attr};" for attr in attributes]
-            method_lines = [f"    public void {method}() {{}}\n" for method in methods]
-            return (
-                f"public class {cls_name}{inheritance} {{\n"
-                + "\n".join(attr_lines) + "\n"
-                + "\n".join(method_lines) + "\n}\n"
-            )
-        elif language == "php":
-            inheritance = f" extends {parent_class}" if parent_class else ""
-            attr_lines = [f"    private ${attr};" for attr in attributes]
-            method_lines = [f"    public function {method}() {{}}\n" for method in methods]
-            return (
-                f"<?php\nclass {cls_name}{inheritance} {{\n"
-                + "\n".join(attr_lines) + "\n"
-                + "\n".join(method_lines) + "\n}\n?>\n"
-            )
-        else:
-            raise ValueError("Unsupported language")
-
-    # Process each class
+    code_output = ""
     for cls_name, cls_data in classes.items():
-        parent_class = None
+        class_name = cls_data["name"]
+        attributes = cls_data["attributes"]
+        methods = cls_data["methods"]
 
-        # Check for inheritance
-        for assoc in associations:
-            if assoc["type"] == "inheritance" and assoc["to"] == cls_name:
-                parent_class = assoc["from"]
+        # Check associations for inheritance
+        parents = [assoc["from"] for assoc in associations if assoc["to"] == class_name and assoc["type"] == "inheritance"]
+        parent_class = parents[0] if parents else None
 
-        # Generate class definition
-        code_output.append(format_class(cls_name, cls_data["attributes"], cls_data["methods"], parent_class))
+        # Generate code for the class
+        if language == "python":
+            code_output += generate_python_code(class_name, attributes, methods, parent_class) + "\n\n"
+        elif language == "java":
+            code_output += generate_java_code(class_name, attributes, methods, parent_class) + "\n\n"
+        elif language == "php":
+            code_output += generate_php_code(class_name, attributes, methods, parent_class) + "\n\n"
+        else:
+            raise ValueError("Unsupported language. Choose python, java, or php.")
 
-    # Handle aggregation and dependencies
-    for assoc in associations:
-        if assoc["type"] == "aggregation":
-            # Add an attribute for aggregation
-            code_output.append(
-                f"# Aggregation: {assoc['from']} aggregates {assoc['to']}\n"
-            )
-        elif assoc["type"] == "dependency":
-            # Add a method parameter for dependency
-            code_output.append(
-                f"# Dependency: {assoc['from']} depends on {assoc['to']}\n"
-            )
+        # Generate code for composition and aggregation
+        related_classes = [
+            assoc for assoc in associations if assoc["from"] == class_name and assoc["type"] in {"composition", "aggregation"}
+        ]
+        for assoc in related_classes:
+            code_output += generate_relationship_code(language, assoc, classes) + "\n"
 
-    return "\n".join(code_output)
+    return code_output
 
 
-# Example Usage
-uml_diagram = {
-    "classes": [
-        {
-            "name": "a",
-            "attributes": ["a"],
-            "methods": ["a"],
-            "position": [20.0, 100.0, 220.0, 220.0],
-        },
-        {
-            "name": "b",
-            "attributes": ["b"],
-            "methods": ["b"],
-            "position": [467.0, 118.0, 667.0, 238.0],
-        },
-    ],
-    "associations": [
-        {"type": "inheritance", "from": "a", "to": "b"},
-        {"type": "aggregation", "from": "a", "to": "b"},
-        {"type": "dependency", "from": "b", "to": "a"},
-    ],
-}
+def generate_python_code(class_name, attributes, methods, parent_class):
+    inheritance = f"({parent_class})" if parent_class else ""
+    attr_lines = [f"    {attr} = None" for attr in attributes]
+    method_lines = [f"    def {method}(self):\n        pass" for method in methods]
 
-# Generate Python Code
-print("Python Code:")
-print(generate_code_from_diagram(uml_diagram, "python"))
+    return f"class {class_name}{inheritance}:\n" + "\n".join(attr_lines + method_lines)
 
-# Generate Java Code
-print("\nJava Code:")
-print(generate_code_from_diagram(uml_diagram, "java"))
 
-# Generate PHP Code
-print("\nPHP Code:")
-print(generate_code_from_diagram(uml_diagram, "php"))
+def generate_java_code(class_name, attributes, methods, parent_class):
+    inheritance = f" extends {parent_class}" if parent_class else ""
+    attr_lines = [f"    private Object {attr};" for attr in attributes]
+    method_lines = [f"    public void {method}() {{}}\n" for method in methods]
+
+    return f"public class {class_name}{inheritance} {{\n" + "\n".join(attr_lines + method_lines) + "\n}"
+
+
+def generate_php_code(class_name, attributes, methods, parent_class):
+    inheritance = f" extends {parent_class}" if parent_class else ""
+    attr_lines = [f"    public ${attr};" for attr in attributes]
+    method_lines = [f"    public function {method}() {{}}\n" for method in methods]
+
+    return f"class {class_name}{inheritance} {{\n" + "\n".join(attr_lines + method_lines) + "\n}"
+
+
+def generate_relationship_code(language, assoc, classes):
+    """Generate code for composition and aggregation relationships."""
+    from_class = assoc["from"]
+    to_class = assoc["to"]
+    assoc_type = assoc["type"]
+
+    if language == "python":
+        if assoc_type == "composition":
+            return f"    self.{to_class.lower()} = {to_class}()  # Composition relationship in {from_class}"
+        elif assoc_type == "aggregation":
+            return f"    self.{to_class.lower()} = None  # Aggregation relationship in {from_class}"
+    elif language == "java":
+        if assoc_type == "composition":
+            return f"    private {to_class} {to_class.lower()};  // Composition relationship in {from_class}"
+        elif assoc_type == "aggregation":
+            return f"    private {to_class} {to_class.lower()};  // Aggregation relationship in {from_class}"
+    elif language == "php":
+        if assoc_type == "composition":
+            return f"    private ${to_class.lower()};  // Composition relationship in {from_class}"
+        elif assoc_type == "aggregation":
+            return f"    private ${to_class.lower()};  // Aggregation relationship in {from_class}"
+
+    return ""  # Fallback for unsupported relationships

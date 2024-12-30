@@ -1,0 +1,29 @@
+{
+    "classes": [
+        {
+            "name": "a",
+            "attributes": [
+                "a"
+            ],
+            "methods": [
+                "a"
+            ]
+        },
+        {
+            "name": "b",
+            "attributes": [
+                "b"
+            ],
+            "methods": [
+                "b"
+            ]
+        }
+    ],
+    "associations": [
+        {
+            "type": "inheritance",
+            "from": "a",
+            "to": "b"
+        }
+    ]
+}
